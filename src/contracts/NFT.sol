@@ -1,8 +1,9 @@
 pragma solidity ^0.8.0;
 
-import '@openzeppelin/contracts/token/ERC1155/ERC1155.sol';
+import '@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol';
 
-contract NFT is ERC1155 {
+
+contract NFT is ERC1155Supply {
 
     string public name;
     string public symbol;
@@ -14,7 +15,7 @@ contract NFT is ERC1155 {
         // mint 3 tokens to the deployer of id 0
         _mint(msg.sender, 0, 3, "");
         // mint 5 tokens to account 2 on ganache of id 1
-        _mint(account2, 0,5,"");        
+        _mint(account2, 0,14,"");        
         name = "Kevin";
         symbol = "KEV";
     }

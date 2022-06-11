@@ -36,11 +36,13 @@ console.log("Account 2's initial balance is ", account2Balance.toString())
 
  one_million_tokens = "1000000000000000"
 
+ ten_million_tokens = "10000000000000000"
+
  // send 5 million tokens to the swap contract
 
 five_million_tokens = "5000000000000000"
 
- await erc.transfer(account_2, five_million_tokens)
+ await erc.transfer(account_2, ten_million_tokens)
 
  // Test your ERC 1155 contract
 
@@ -56,7 +58,7 @@ swap = await Swap.deployed()
 
 
 
-await erc.transfer(swap.address,five_million_tokens, {"from":account_1})
+await erc.transfer(swap.address,ten_million_tokens, {"from":account_1})
 
 console.log("transfer successful")
 
@@ -70,14 +72,17 @@ console.log("The balance of the swap contract prior to the swap is ", swapPawthB
 
 await nft.setApprovalForAll(swap.address,"true", {"from":account_2})
 
+console.log("approval was a success")
+
 // perform the swap
 
 await swap.swapFoundersForPawthVariable(1,{"from":account_2})
 await swap.swapFoundersForPawthVariable(1,{"from":account_2})
 await swap.swapFoundersForPawthVariable(1,{"from":account_2})
-await swap.swapFoundersForPawthVariable(1,{"from":account_2})
-await swap.swapFoundersForPawthVariable(1,{"from":account_2})
 
+
+await swap.swapFoundersForPawthVariable(1,{"from":account_2})
+await swap.swapFoundersForPawthVariable(1,{"from":account_2})
 
 swapPawthBalance2 = await erc.balanceOf(swap.address)
 
@@ -98,12 +103,14 @@ swap_nft_balance1 = await nft.balanceOf(swap.address,0)
 // Now, swap in the other direction (Pawth for 1 founders NFT)
 
 // first, approve the contract to take your pawth
-await erc.approve(swap.address, five_million_tokens, {"from": account_2})
+await erc.approve(swap.address, ten_million_tokens, {"from": account_2})
 
 // next, perform the swap from pawth to a founders
 
 await swap.swapPawthForFoundersVariable(1, {"from": account_2})
 await swap.swapPawthForFoundersVariable(1, {"from": account_2})
+
+
 await swap.swapPawthForFoundersVariable(1, {"from": account_2})
 await swap.swapPawthForFoundersVariable(1, {"from": account_2})
 await swap.swapPawthForFoundersVariable(1, {"from": account_2})
@@ -111,7 +118,7 @@ await swap.swapPawthForFoundersVariable(1, {"from": account_2})
 
 swapPawthBalance3 = await erc.balanceOf(swap.address)
 
-console.log("The pawth balance after 5 swaps the other way is", swapPawthBalance3.toString())
+console.log("The pawth balance after 5 swaps the other way is ", swapPawthBalance3.toString())
 
 // check the nft balance of the founders contract (it should be 01)
 
@@ -132,10 +139,10 @@ await swap.swapFoundersForPawthVariable(1,{"from":account_2})
 
 swapPawthBalance2 = await erc.balanceOf(swap.address)
 
-console.log("The pawth balance of the swap after 5 swaps is", swapPawthBalance2.toString())
+console.log("The pawth balance of the swap after 5 swaps is ", swapPawthBalance2.toString())
 
 // first, approve the contract to take your pawth
-await erc.approve(swap.address, five_million_tokens, {"from": account_2})
+await erc.approve(swap.address, ten_million_tokens, {"from": account_2})
 
 // next, perform the swap from pawth to a founders
 
