@@ -4,12 +4,17 @@ import './App.css'
 
 class App extends Component {
 
-  constructor(props) {
-    super(props)
-    this.state = {
-      account: '0x0'
-    }
+state = {message: "Hello, World!"}
+
+updateState = () => {
+  if (this.state.message == "Hello, World!") {
+    this.setState({message: "Goodbye, World!"})
   }
+  else {
+    this.setState({message: "Hello, World!"})
+  }
+  
+}
 
   render() {
     return (
@@ -26,8 +31,9 @@ class App extends Component {
                 >
                 </a>
 
-                <h1>Hello, World!</h1>
-
+                <h1>{this.state.message}</h1>
+                <br />
+                <button onClick={this.updateState}>change state</button>
               </div>
             </main>
           </div>
