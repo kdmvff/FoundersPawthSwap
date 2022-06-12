@@ -19,18 +19,29 @@ describe("NFT Swapper contract", function () {
   // A common pattern is to declare some variables, and assign them in the
   // `before` and `beforeEach` callbacks.
 
-  const tenMillionTokens = "10000000000000000"
+  const tenMillionTokens = "10000000000000000";
+  const nftName = "Founder's Club";
+  const symbol = "PAWTHFOUNDER";
+  const contractURI = "ipfs://QmZ8pkryYBhbLNkmE52SvoHMbsCrcehvoSSaT2gnCXhxjA/0";
+  
 
   let ErcContract;
   let erc;
   let NftContract;
   let nft;
   let SwapContract;
+  let MainnetNFT;
+  let mainnetnft;
   let swap;
   let addr1;
   let addr2;
   let addrs;
-
+  let primarySaleRecipient;
+  let royaltyRecipient;
+  let royaltyBps;
+  let platformFeeBps;
+  let platformFeeRecipient;
+  let i;
   // `beforeEach` will run before each test, re-deploying the contract every
   // time. It receives a callback, which can be async.
   beforeEach(async function () {
@@ -38,14 +49,21 @@ describe("NFT Swapper contract", function () {
     ErcContract = await ethers.getContractFactory("contracts/ERC.sol:ERC");
     NftContract = await ethers.getContractFactory("contracts/NFT.sol:NFT");
     SwapContract = await ethers.getContractFactory("contracts/Swap.sol:Swap");
-
+    MainnetNFT = await ethers.getContractFactory("contracts/MainnetNFT.sol:DropERC1155");
     // addresses
     [owner, addr1, addr2, ...addrs] = await ethers.getSigners();
-
+    // initialize some variables for the initializer function (basically a second constructor in the contract)
+    
+    primarySaleRecipient = owner.address;
+    royaltyRecipient = owner.address;
+    royaltyBps = 250;
+    platformFeeBps = 0;
+    platformFeeRecipient = owner.address;
     // deploy contracts
     erc = await ErcContract.deploy();
     nft = await NftContract.deploy(addr1.address, addr2.address);
     swap = await SwapContract.deploy(nft.address, erc.address);
+    mainnetnft = await MainnetNFT.deploy(owner.address);
 
     // give the swap contract 10M tokens
     await erc.transfer(swap.address, tenMillionTokens)
@@ -60,6 +78,10 @@ describe("NFT Swapper contract", function () {
       const ownerWallet = "0x8E6a9e6F141BF9bd5A9a4318aD5458D1ad312939";
       expect(await swap.ownerWallet()).to.equal(ownerWallet);
     });
+    it("Should give mainnet nft a symbol", async function () {
+      expect(await mainnetnft.symbol()).to.equal("PAWTHFOUNDER");
+      console.log("mainnet nft symbol is ", symbol);
+    })
   })
 
   describe("Variable swap", function () {
@@ -77,6 +99,9 @@ describe("NFT Swapper contract", function () {
       await nft.connect(addr1).setApprovalForAll(swap.address,"true");
       await swap.connect(addr1).swapFoundersForPawthVariable(1);
       const ercAddr1BalanceAfter = await erc.balanceOf(addr1.address);
+
+      console.log("Hello, ", ercAddr1BalanceAfter)
+
 
       // address 2 swaps nft for tokens
       await nft.connect(addr2).setApprovalForAll(swap.address,"true");

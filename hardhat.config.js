@@ -26,6 +26,16 @@ module.exports = {
             runs: 200
           }
         }
+      },
+      // replace this with the version of solidity that you need
+      {
+        version: "0.8.11",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200
+          }
+        }
       }
     ]
   }
