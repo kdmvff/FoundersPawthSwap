@@ -1,13 +1,13 @@
-pragma solidity ^0.8.1;
+pragma solidity ^0.8.0;
 
 import '@openzeppelin/contracts/utils/math/SafeMath.sol';
-import '@openzeppelin/contracts/token/ERC1155/IERC1155.sol';
+import '@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol';
 import '@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
 contract Swap is ERC1155Holder {
     using SafeMath for uint256;
-    IERC1155 public founders;
+    ERC1155Supply public founders;
     IERC20 public pawth;
     uint256 public foundersId = 0;
     string public tokenURI = "ipfs://QmfF1YwwSvV5veD1MysGBAaDds6nBgTUqs3r6hCUsb4XmR/0";
@@ -18,11 +18,11 @@ contract Swap is ERC1155Holder {
     address public multiSigWallet = 0xA1924006401CaBEcC4EF4AB7542EeaA357449ed6;
 
     // the totalSupply() from the founder's nft contract cannot be accessed. Hence, it will need to be manually updated every so often
-    uint256 public manualNFTSupply = 30;
+    //uint256 public manualNFTSupply = 30;
 
     // Create two types of swaps: Variable and Fixed
     // If variable is set to "true", the contract is designed to accumulate pawth over time
-    // If variable is set to "fixed", the contract has a fixed swap rate, and might accumulate pawth with reflections and dev wallet additions
+    // If variable is set to "fixed", the contract has a fixed swap rate
     bool public variableSwapRateOn = true;
 
     // if a fixed swap rate is being used, specify the fixed swap rate
@@ -31,22 +31,17 @@ contract Swap is ERC1155Holder {
     // Can add a fixed swap rate tax
     bool public fixedClaimTax = true;
 
-    constructor(IERC1155 _founders, IERC20 _pawth) public {
+    constructor(ERC1155Supply _founders, IERC20 _pawth) public {
         founders = _founders;
         pawth = _pawth;
     }
-
-    // manually adjust the total supply as more tokens are minted (cannot exceed 99 in total)
-    function adjustNFTTotalSupply(uint256 amount) public {
-        require(msg.sender == ownerWallet || msg.sender == multiSigWallet, "You are not permitted to call this function.");
-        require(amount >=14 && amount <=99, "You cannot set the totalSupply beyond this range");
-    } 
 
     // sets the founders claim tax for a variableSwap
     function setVariableClaimTax(uint256 tax) public {
         require(msg.sender == ownerWallet || msg.sender == multiSigWallet, "You are not permitted to change the tax");
         require(tax < 130, "You cannot set a tax above 30%");
         require(tax >=100, "You cannot set a tax below 0%");
+        pawthClaimTax = tax;
     }
 
     // if set to true, contract designed to favor Pawth accumulation. if false, fixed swap rate is used.
@@ -76,20 +71,18 @@ contract Swap is ERC1155Holder {
         require(sent, "Transaction failed.");
     }
 
+    // create a function to transfer out founders nfts
+
     // change the fixedPawthSwapRate
-    function setFixedSwapRate(uint256 amount, bool fixedSwapTaxOn) public {
+    function toggleFixedSwapTax( bool fixedSwapTaxOn) public {
         require(msg.sender == ownerWallet || msg.sender == multiSigWallet, "Not permitted to change fixed Swap Rate.");
-        // fixedPawthSwapRate cannot exceed 1 million Pawth
-        require(amount <= 1000000000000000, "Swap rate can't be set that high.");
-        fixedPawthSwapRate = amount;
-        // set whether the fixed claim tax is on
         fixedClaimTax = fixedSwapTaxOn;
     }
 
     function getCurrentFoundersForPawthRate(uint256 numberOfFoundersToSwap) public view returns(uint256) {
 
         if (variableSwapRateOn == true) {
-        uint256 swapDivider = manualNFTSupply.add(founders.balanceOf(address(this),0));
+        uint256 swapDivider = founders.totalSupply(foundersId).add(founders.balanceOf(address(this),0));
 
         // calculate the amount of Pawth that they will receive
         uint256 pawthAmountToSwap = numberOfFoundersToSwap.mul(pawth.balanceOf(address(this))).div(swapDivider);
@@ -99,7 +92,7 @@ contract Swap is ERC1155Holder {
         }
 
         else {
-            uint256 pawthAmountToSwap = numberOfFoundersToSwap.mul(fixedPawthSwapRate);
+            uint256 pawthAmountToSwap = numberOfFoundersToSwap.mul(pawth.balanceOf(address(this))).div(founders.totalSupply(foundersId));
             return pawthAmountToSwap;
         }
     }
@@ -108,39 +101,43 @@ contract Swap is ERC1155Holder {
 
         if (variableSwapRateOn == true) {
             // calculate the exchange rate of Pawth for a founders
-        uint256 amountOfPawthRequired = numberOfFoundersToSwap.mul(pawth.balanceOf(address(this))).mul(pawthClaimTax).div(100).div(manualNFTSupply);
+        uint256 amountOfPawthRequired = numberOfFoundersToSwap.mul(pawth.balanceOf(address(this))).mul(pawthClaimTax).div(100).div(founders.totalSupply(foundersId));
         
         return amountOfPawthRequired;
         }
         else {
             
             if(fixedClaimTax == true) {
-                uint256 amountOfPawthToSend = numberOfFoundersToSwap.mul(fixedPawthSwapRate).mul(pawthClaimTax).div(100);
+                uint256 amountOfPawthToSend = numberOfFoundersToSwap.mul(pawth.balanceOf(address(this))).div(founders.totalSupply(foundersId)).mul(pawthClaimTax).div(100);
                 return amountOfPawthToSend;
             }
             else {
-                uint256 amountOfPawthToSend = numberOfFoundersToSwap.mul(fixedPawthSwapRate);
+                uint256 amountOfPawthToSend = numberOfFoundersToSwap.mul(pawth.balanceOf(address(this))).div(founders.totalSupply(foundersId));
                 return amountOfPawthToSend;
             }
         }
     }
 
     function swapFoundersForPawthVariable(uint256 numberOfFoundersToSwap) public {
-
+        // make sure variable swaps are enabled
         require(variableSwapRateOn == true, "Variable swaps are not enabled.");
+
+
         // make sure that the msg.sender has enough founders to swap
         uint256 numberOfFoundersHeldBySender = founders.balanceOf(msg.sender,foundersId);
 
         // require that the sender has enough founders tokens to swap
         require(numberOfFoundersHeldBySender >= numberOfFoundersToSwap, "You don't have enough founders tokens");
 
-        // require that the number of founders entered is greater than 0
-        require(numberOfFoundersToSwap >0, "You need to swap more than 0 founders nfts");
+        // require that the number of founders entered is greater than 0 and less than 4
+        require(numberOfFoundersToSwap >0 && numberOfFoundersToSwap <4, "You can swap more than 0 and less than 4 founders nfts");
 
         // the amount of pawth that can be withdrawn goes down as the number of nfts in the swap contract increases
         // To do this, the swapDivider variable adds the number of founders NFTs in the contract to the denominator
 
-        uint256 swapDivider = manualNFTSupply.add(founders.balanceOf(address(this),0));
+        uint256 totalSupply = founders.totalSupply(foundersId);
+
+        uint256 swapDivider = totalSupply.add(founders.balanceOf(address(this),foundersId));
 
         // calculate the amount of Pawth that they will receive
         uint256 pawthAmountToSwap = numberOfFoundersToSwap.mul(pawth.balanceOf(address(this))).div(swapDivider);
@@ -163,7 +160,7 @@ contract Swap is ERC1155Holder {
         uint256 amountOfPawthHeldBySender = pawth.balanceOf(msg.sender);
 
         // calculate the exchange rate of Pawth for a founders
-        uint256 amountOfPawthRequired = numberOfFoundersToClaim.mul(pawth.balanceOf(address(this))).mul(pawthClaimTax).div(100).div(manualNFTSupply);
+        uint256 amountOfPawthRequired = numberOfFoundersToClaim.mul(pawth.balanceOf(address(this))).mul(pawthClaimTax).div(100).div(founders.totalSupply(foundersId));
 
         // make sure the msg.sender has enough pawth
         require(amountOfPawthHeldBySender >= amountOfPawthRequired, "You don't have enough Pawth");
@@ -173,7 +170,7 @@ contract Swap is ERC1155Holder {
 
         // make sure the person is trying to claim at least 1 founders nft
 
-        require(numberOfFoundersToClaim > 0, "You need to claim at least 1 founders");
+        require(numberOfFoundersToClaim >0 && numberOfFoundersToClaim <4, "You can claim more than 0 and less than 4 founders nfts");
 
         // send the pawth tokens to the swap contract
 
@@ -194,10 +191,10 @@ contract Swap is ERC1155Holder {
         require(numberOfFoundersHeldBySender >= numberOfFoundersToSwap, "You don't have enough founders tokens");
 
         // require that the number of founders entered is greater than 0
-        require(numberOfFoundersToSwap >0, "You need to swap more than 0 founders nfts");
+        require(numberOfFoundersToSwap >0 && numberOfFoundersToSwap < 4, "You can swap more than 0 and up to 3 founders nfts");
 
         // calculate the amount of Pawth to send
-        uint256 amountOfPawthToSend = numberOfFoundersToSwap.mul(fixedPawthSwapRate);
+        uint256 amountOfPawthToSend = numberOfFoundersToSwap.mul(pawth.balanceOf(address(this))).div(founders.totalSupply(foundersId));
 
         // make sure the pawth contract has enough tokens
         require(pawth.balanceOf(address(this)) >= amountOfPawthToSend,"The swap contract doesn't have enough Pawth");
@@ -217,7 +214,7 @@ contract Swap is ERC1155Holder {
         uint256 amountOfPawthHeldBySender = pawth.balanceOf(msg.sender);
 
         // calculate the amount of Pawth to send
-        uint256 amountOfPawthToSend = numberOfFoundersToClaim.mul(fixedPawthSwapRate);
+        uint256 amountOfPawthToSend = numberOfFoundersToClaim.mul(pawth.balanceOf(address(this))).div(founders.totalSupply(foundersId));
 
         // of fixedClaimTax == true, add a tax such that the Pawth contract accumulates Pawth
 
@@ -233,7 +230,7 @@ contract Swap is ERC1155Holder {
 
         // make sure the person is trying to claim at least 1 founders nft
 
-        require(numberOfFoundersToClaim > 0, "You need to claim at least 1 founders");
+        require(numberOfFoundersToClaim > 0 && numberOfFoundersToClaim < 4, "You can swap more than 0 and up to 3 founders nfts");
 
         // send the pawth tokens to the swap contract
 
