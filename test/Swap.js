@@ -51,6 +51,10 @@ describe("NFT Swapper contract", function () {
   });
 
   describe("Deployment", function () {
+    it("Should give the ERC20 an address", async function() {
+      expect(erc.address).to.not.be.null;
+    });
+
     it("Should set the right owner", async function () {
       const ownerWallet = "0x8E6a9e6F141BF9bd5A9a4318aD5458D1ad312939";
       expect(await swap.ownerWallet()).to.equal(ownerWallet);
