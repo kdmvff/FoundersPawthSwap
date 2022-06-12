@@ -19,9 +19,7 @@ describe("NFT Swapper contract", function () {
   // A common pattern is to declare some variables, and assign them in the
   // `before` and `beforeEach` callbacks.
 
-  const oneMillionPawth = '1000000000000000';
-  const oneHundredMillionPawth = '100000000000000000';
-  const tenEth = '10000000000000000000';
+  const tenMillionTokens = "10000000000000000"
 
   let ErcContract;
   let erc;
@@ -46,8 +44,11 @@ describe("NFT Swapper contract", function () {
 
     // deploy contracts
     erc = await ErcContract.deploy();
-    nft = await NftContract.deploy();
+    nft = await NftContract.deploy(addr1.address, addr2.address);
     swap = await SwapContract.deploy(nft.address, erc.address);
+
+    // give the swap contract 10M tokens
+    await erc.transfer(swap.address, tenMillionTokens)
   });
 
   describe("Deployment", function () {
@@ -58,6 +59,32 @@ describe("NFT Swapper contract", function () {
     it("Should set the right owner", async function () {
       const ownerWallet = "0x8E6a9e6F141BF9bd5A9a4318aD5458D1ad312939";
       expect(await swap.ownerWallet()).to.equal(ownerWallet);
+    });
+  })
+
+  describe("Variable swap", function () {
+    it("Should allow a user to swap nfts for tokens", async function () {
+      const ercBalanceBefore = await erc.balanceOf(addr2.address);
+      expect(Number(ercBalanceBefore)).to.equal(0);
+      await nft.connect(addr2).setApprovalForAll(swap.address,"true");
+      await swap.connect(addr2).swapFoundersForPawthVariable(1);
+      const ercBalanceAfter = await erc.balanceOf(addr2.address);
+      expect(Number(ercBalanceAfter)).to.be.greaterThan(Number(ercBalanceBefore));
+    });
+
+    it("Should swap NFT for less tokens on subsequent swaps", async function () {
+      // address 1 swaps nft for tokens
+      await nft.connect(addr1).setApprovalForAll(swap.address,"true");
+      await swap.connect(addr1).swapFoundersForPawthVariable(1);
+      const ercAddr1BalanceAfter = await erc.balanceOf(addr1.address);
+
+      // address 2 swaps nft for tokens
+      await nft.connect(addr2).setApprovalForAll(swap.address,"true");
+      await swap.connect(addr2).swapFoundersForPawthVariable(1);
+      const ercAddr2BalanceAfter = await erc.balanceOf(addr2.address);
+
+      // address 1 has more tokens than address 2
+      expect(Number(ercAddr1BalanceAfter)).to.be.greaterThan(Number(ercAddr2BalanceAfter));
     });
   })
 });
