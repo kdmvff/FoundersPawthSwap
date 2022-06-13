@@ -1,5 +1,6 @@
 // We import Chai to use its asserting functions here.
-const { expect } = require("chai");
+const { expect } = require("chai","chai-string");
+
 const { ethers, waffle } = require("hardhat");
 
 // `describe` is a Mocha function that allows you to organize your tests. It's
@@ -41,7 +42,7 @@ describe("NFT Swapper contract", function () {
   let royaltyBps;
   let platformFeeBps;
   let platformFeeRecipient;
-  let i;
+  let i =0;
   // `beforeEach` will run before each test, re-deploying the contract every
   // time. It receives a callback, which can be async.
   beforeEach(async function () {
@@ -49,7 +50,7 @@ describe("NFT Swapper contract", function () {
     ErcContract = await ethers.getContractFactory("contracts/ERC.sol:ERC");
     NftContract = await ethers.getContractFactory("contracts/NFT.sol:NFT");
     SwapContract = await ethers.getContractFactory("contracts/Swap.sol:Swap");
-    MainnetNFT = await ethers.getContractFactory("contracts/MainnetNFT.sol:DropERC1155");
+    MainnetNFT = await ethers.getContractFactory("contracts/MainnetNFT.sol:MainnetNFT");
     // addresses
     [owner, addr1, addr2, ...addrs] = await ethers.getSigners();
     // initialize some variables for the initializer function (basically a second constructor in the contract)
@@ -63,7 +64,9 @@ describe("NFT Swapper contract", function () {
     erc = await ErcContract.deploy();
     nft = await NftContract.deploy(addr1.address, addr2.address);
     swap = await SwapContract.deploy(nft.address, erc.address);
-    mainnetnft = await MainnetNFT.deploy(owner.address);
+    mainnetnft = await MainnetNFT.deploy(owner.address, owner.address,
+       nftName, symbol, contractURI, [owner.address],
+       owner.address,owner.address,250,0,owner.address);
 
     // give the swap contract 10M tokens
     await erc.transfer(swap.address, tenMillionTokens)
@@ -78,9 +81,18 @@ describe("NFT Swapper contract", function () {
       const ownerWallet = "0x8E6a9e6F141BF9bd5A9a4318aD5458D1ad312939";
       expect(await swap.ownerWallet()).to.equal(ownerWallet);
     });
+    
     it("Should give mainnet nft a symbol", async function () {
-      expect(await mainnetnft.symbol()).to.equal("PAWTHFOUNDER");
-      console.log("mainnet nft symbol is ", symbol);
+      nftSymbol = await mainnetnft.symbol();
+      console.log("mainnet nft symbol is ", nftSymbol);
+      expect(nftSymbol).to.equal(symbol);
+
+    });
+    it("Should have the right contract URI", async function () {
+      URI = await mainnetnft.contractURI();
+      console.log("mainnet nft uri is ", URI);
+      expect(URI).to.equal(contractURI);
+
     })
   })
 

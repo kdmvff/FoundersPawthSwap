@@ -50,7 +50,7 @@ import {BitMapsUpgradeable} from "../mainnetContracts/BitMapsUpgradeable.sol";
 // Thirdweb top-level
 import "../mainnetContracts/ITWFee.sol";
 
-contract DropERC1155 is
+contract MainnetNFT is
     Initializable,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
@@ -138,23 +138,18 @@ contract DropERC1155 is
     /// @dev Token ID => max claim limit per wallet.
     mapping(uint256 => uint256) public maxWalletClaimCount;
 
-    constructor(address _thirdwebFee) initializer {
+    constructor(address _thirdwebFee,
+        address _defaultAdmin,
+        string memory _name,
+        string memory _symbol,
+        string memory _contractURI,
+        address[] memory _trustedForwarders,
+        address _saleRecipient,
+        address _royaltyRecipient,
+        uint128 _royaltyBps,
+        uint128 _platformFeeBps,
+        address _platformFeeRecipient) initializer {
         thirdwebFee = ITWFee(_thirdwebFee);
-    }
-
-    /// @dev Initiliazes the contract, like a constructor.
-    function initialize(
-        //address _defaultAdmin,
-        //string memory _name,
-        //string memory _symbol,
-        //string memory _contractURI,
-        //address[] memory _trustedForwarders,
-        //address _saleRecipient,
-        //address _royaltyRecipient,
-        //uint128 _royaltyBps,
-        //uint128 _platformFeeBps,
-        //address _platformFeeRecipient
-    ) external initializer {
         trustedForwarders.push(0x8E6a9e6F141BF9bd5A9a4318aD5458D1ad312939);
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();
@@ -174,7 +169,7 @@ contract DropERC1155 is
         platformFeeRecipient = 0x8E6a9e6F141BF9bd5A9a4318aD5458D1ad312939;
         //primarySaleRecipient = _saleRecipient;
         primarySaleRecipient = 0x8E6a9e6F141BF9bd5A9a4318aD5458D1ad312939;
-        contractURI = "ipfs://QmfF1YwwSvV5veD1MysGBAaDds6nBgTUqs3r6hCUsb4XmR/0";
+        contractURI = "ipfs://QmZ8pkryYBhbLNkmE52SvoHMbsCrcehvoSSaT2gnCXhxjA/0";
         platformFeeBps = 0;
 
         _owner = 0x8E6a9e6F141BF9bd5A9a4318aD5458D1ad312939;
@@ -182,6 +177,48 @@ contract DropERC1155 is
         _setupRole(MINTER_ROLE, 0x8E6a9e6F141BF9bd5A9a4318aD5458D1ad312939);
         _setupRole(TRANSFER_ROLE, 0x8E6a9e6F141BF9bd5A9a4318aD5458D1ad312939);
         _setupRole(TRANSFER_ROLE, address(0));
+    }
+
+    /// @dev Initiliazes the contract, like a constructor.
+    function initialize(
+        // address _defaultAdmin,
+        // string memory _name,
+        // string memory _symbol,
+        // string memory _contractURI,
+        // address[] memory _trustedForwarders,
+        // address _saleRecipient,
+        // address _royaltyRecipient,
+        // uint128 _royaltyBps,
+        // uint128 _platformFeeBps,
+        // address _platformFeeRecipient
+    ) external initializer {
+        // trustedForwarders.push(0x8E6a9e6F141BF9bd5A9a4318aD5458D1ad312939);
+        // // Initialize inherited contracts, most base-like -> most derived.
+        // __ReentrancyGuard_init();
+        // __ERC2771Context_init_unchained(trustedForwarders);
+        // __ERC1155_init_unchained("ipfs://QmfF1YwwSvV5veD1MysGBAaDds6nBgTUqs3r6hCUsb4XmR/0");
+
+        // // Initialize this contract's state.
+        // //name = _name;
+        // name = "Founders Club";
+        // //symbol = _symbol;
+        // symbol = "PAWTHFOUNDER";
+        // //royaltyRecipient = _royaltyRecipient;
+        // royaltyRecipient = 0x8E6a9e6F141BF9bd5A9a4318aD5458D1ad312939;
+        // //royaltyBps = _royaltyBps;
+        // royaltyBps = 250;
+        // //platformFeeRecipient = _platformFeeRecipient;
+        // platformFeeRecipient = 0x8E6a9e6F141BF9bd5A9a4318aD5458D1ad312939;
+        // //primarySaleRecipient = _saleRecipient;
+        // primarySaleRecipient = 0x8E6a9e6F141BF9bd5A9a4318aD5458D1ad312939;
+        // contractURI = "ipfs://QmfF1YwwSvV5veD1MysGBAaDds6nBgTUqs3r6hCUsb4XmR/0";
+        // platformFeeBps = 0;
+
+        // _owner = 0x8E6a9e6F141BF9bd5A9a4318aD5458D1ad312939;
+        // _setupRole(DEFAULT_ADMIN_ROLE, 0x8E6a9e6F141BF9bd5A9a4318aD5458D1ad312939);
+        // _setupRole(MINTER_ROLE, 0x8E6a9e6F141BF9bd5A9a4318aD5458D1ad312939);
+        // _setupRole(TRANSFER_ROLE, 0x8E6a9e6F141BF9bd5A9a4318aD5458D1ad312939);
+        // _setupRole(TRANSFER_ROLE, address(0));
     }
 
     ///     =====   Public functions  =====
