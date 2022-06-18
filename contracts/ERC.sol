@@ -9,7 +9,6 @@ contract ERC is ERC20 {
     constructor() ERC20("KevToken","KEV") public {
         // 1 billion tokens
         uint256 initialSupply = 1_000_000_000_000_000_000;
-        console.log("initial supply is %s",initialSupply);
         _mint(msg.sender, initialSupply);
     }
 }

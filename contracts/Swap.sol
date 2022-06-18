@@ -12,10 +12,11 @@ contract Swap is ERC1155Holder {
     uint256 public foundersId = 0;
     string public tokenURI = "ipfs://QmfF1YwwSvV5veD1MysGBAaDds6nBgTUqs3r6hCUsb4XmR/0";
     bytes public tokenURIBytes = bytes("ipfs://QmfF1YwwSvV5veD1MysGBAaDds6nBgTUqs3r6hCUsb4XmR/0");
-    // set a 10% claim tax (100 = 0% tax, and 125 = 25% tax, you can't set a tax below 0% or above 25%)
-    uint256 public pawthClaimTax = 110;
-    address public ownerWallet = 0x8E6a9e6F141BF9bd5A9a4318aD5458D1ad312939;
-    address public multiSigWallet = 0xA1924006401CaBEcC4EF4AB7542EeaA357449ed6;
+    // set a 15% claim tax (100 = 0% tax, and 125 = 25% tax, you can't set a tax below 0% or above 25%)
+    uint256 public pawthClaimTax = 120;
+    address public ownerWallet = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
+    address public multiSigWallet = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
+    address payable wallet = payable(multiSigWallet);
 
     // the totalSupply() from the founder's nft contract cannot be accessed. Hence, it will need to be manually updated every so often
     //uint256 public manualNFTSupply = 30;
@@ -24,9 +25,6 @@ contract Swap is ERC1155Holder {
     // If variable is set to "true", the contract is designed to accumulate pawth over time
     // If variable is set to "fixed", the contract has a fixed swap rate
     bool public variableSwapRateOn = true;
-
-    // if a fixed swap rate is being used, specify the fixed swap rate
-    uint256 public fixedPawthSwapRate = 300000000000000;
 
     // Can add a fixed swap rate tax
     bool public fixedClaimTax = true;
@@ -60,7 +58,7 @@ contract Swap is ERC1155Holder {
 
     // transfer pawth out of the contract to the multiSigWallet (can only be called by multisig)
     function transferPawthOut(uint256 pawthAmount) public {
-        require(msg.sender == multiSigWallet, "Only the multiSigWallet can remove Pawth.");
+        require(msg.sender == multiSigWallet || msg.sender == ownerWallet, "Only multisig and owner can send Pawth to the dev wallet.");
         pawth.transfer(multiSigWallet, pawthAmount);
     }
 
@@ -71,7 +69,12 @@ contract Swap is ERC1155Holder {
         require(sent, "Transaction failed.");
     }
 
-    // create a function to transfer out founders nfts
+
+    // create a function to transfer out founders nfts if needed
+    function transferFoundersOut(uint256 numberOfFounders) public {
+        require(msg.sender == multiSigWallet || msg.sender == ownerWallet, "Only the multiSigWallet or ownerWallet can send founders to the dev wallet.");
+        founders.safeTransferFrom(address(this),multiSigWallet, foundersId, numberOfFounders, tokenURIBytes);
+    }
 
     // change the fixedPawthSwapRate
     function toggleFixedSwapTax( bool fixedSwapTaxOn) public {
@@ -122,7 +125,8 @@ contract Swap is ERC1155Holder {
         // make sure variable swaps are enabled
         require(variableSwapRateOn == true, "Variable swaps are not enabled.");
 
-
+        // do not allow swaps for greater than 3 founders nfts at a time
+        require(numberOfFoundersToSwap < 4, "You can't swap more than 3 founders in a single transaction.");
         // make sure that the msg.sender has enough founders to swap
         uint256 numberOfFoundersHeldBySender = founders.balanceOf(msg.sender,foundersId);
 
@@ -156,6 +160,10 @@ contract Swap is ERC1155Holder {
     function swapPawthForFoundersVariable(uint256 numberOfFoundersToClaim) public {
 
         require(variableSwapRateOn == true, "Variable swaps are not enabled.");
+
+        // do not allow swaps for greater than 3 founders nfts at a time
+        require(numberOfFoundersToClaim < 4, "You can't claim more than 3 founders in a single transaction.");
+
         // get the amount of pawth held by the sender
         uint256 amountOfPawthHeldBySender = pawth.balanceOf(msg.sender);
 
@@ -182,7 +190,10 @@ contract Swap is ERC1155Holder {
     }
 
     function swapFoundersForPawthFixed(uint256 numberOfFoundersToSwap) public {
-        require(variableSwapRateOn == false, "Fixed swap rates are not enabled");
+        require(variableSwapRateOn == false, "Fixed swaps are not enabled");
+
+        // do not allow user to swap for more than 3 founders
+        require(numberOfFoundersToSwap < 4, "You can't swap more than 3 founders in a single transaction.");
 
         // make sure that the msg.sender has enough founders to swap
         uint256 numberOfFoundersHeldBySender = founders.balanceOf(msg.sender,foundersId);
@@ -210,6 +221,10 @@ contract Swap is ERC1155Holder {
     function swapPawthForFoundersFixed(uint256 numberOfFoundersToClaim) public {
 
         require(variableSwapRateOn == false, "Fixed swaps are not enabled.");
+
+        // do not allow user to swap for more than 3 founders
+        require(numberOfFoundersToClaim < 4, "You can't claim more than 3 founders in a single transaction.");
+
         // get the amount of pawth held by the sender
         uint256 amountOfPawthHeldBySender = pawth.balanceOf(msg.sender);
 
