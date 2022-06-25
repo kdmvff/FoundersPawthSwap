@@ -14,9 +14,9 @@ contract Swap is ERC1155Holder {
     bytes public tokenURIBytes = bytes("ipfs://QmfF1YwwSvV5veD1MysGBAaDds6nBgTUqs3r6hCUsb4XmR/0");
     // set a 15% claim tax (100 = 0% tax, and 125 = 25% tax, you can't set a tax below 0% or above 25%)
     uint256 public pawthClaimTax = 120;
-    address public ownerWallet = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
-    address public multiSigWallet = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
-    address payable wallet = payable(multiSigWallet);
+    address public ownerWallet = 0x4ADb500025fFe164d7BB2845b669513056b9E6a4;
+    address public multiSigWallet = 0x16b1db77b60C8d8b6eCea0fa4E0481E9f53C9Ba1;
+    // address payable wallet = payable(multiSigWallet);
 
     // the totalSupply() from the founder's nft contract cannot be accessed. Hence, it will need to be manually updated every so often
     //uint256 public manualNFTSupply = 30;
@@ -62,12 +62,12 @@ contract Swap is ERC1155Holder {
         pawth.transfer(multiSigWallet, pawthAmount);
     }
 
-    // transfer eth out in the event that there is eth stuck in the contract (can only be called by multisig)
-    function transferEthOut(bool sent, uint256 ethAmount) public payable {
-        require(msg.sender == multiSigWallet, "Only the multiSigWallet can remove Eth.");
-        multiSigWallet.call{value:ethAmount}("");
-        require(sent, "Transaction failed.");
-    }
+    // // transfer eth out in the event that there is eth stuck in the contract (can only be called by multisig)
+    // function transferEthOut(uint256 ethAmount) public payable { 
+    //     require(msg.sender == multiSigWallet, "Only the multiSigWallet can remove Eth.");
+    //     (bool sent, ) = multiSigWallet.call{value:ethAmount}("");
+    //     require(sent, "Transaction failed.");
+    // }
 
 
     // create a function to transfer out founders nfts if needed

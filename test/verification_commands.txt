@@ -1,0 +1,5 @@
+erc20 command -> npx hardhat verify --contract contracts/MainnetERC.sol:ERC --network rinkeby 0x5814f08cb3289C273E1EfEC517b585deD7b1A898
+nft command -> 
+swap command -> npx hardhat verify ADDRESS_HERE --network rinkeby FoundersAddress PawthAddress
+
+deploy tokens -> npx hardhat run test/deploy.js --network rinkeby

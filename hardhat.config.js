@@ -1,6 +1,7 @@
 require("@nomiclabs/hardhat-waffle");
 require('dotenv').config();
-const privateKey = process.env.PRIVATE_KEY;
+require("@nomiclabs/hardhat-etherscan");
+const secret =require("./secret.json")
 
 module.exports = {
   networks: {
@@ -14,7 +15,14 @@ module.exports = {
     // bscTestnet: {
     //   url: `https://data-seed-prebsc-2-s1.binance.org:8545/`,
     //   accounts: [`${privateKey}`]
-    // }
+    // },
+    rinkeby: {
+      url: secret.rinkebyUrl,
+      accounts: [secret.key]
+    }
+  },
+  etherscan: {
+    apiKey: "XZUPHA25SS23BSDVQZTAGJ1WASF7ANFITZ"
   },
   solidity: {
     compilers: [

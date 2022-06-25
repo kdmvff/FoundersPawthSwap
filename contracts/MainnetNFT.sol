@@ -177,6 +177,7 @@ contract MainnetNFT is
         _setupRole(MINTER_ROLE, 0x8E6a9e6F141BF9bd5A9a4318aD5458D1ad312939);
         _setupRole(TRANSFER_ROLE, 0x8E6a9e6F141BF9bd5A9a4318aD5458D1ad312939);
         _setupRole(TRANSFER_ROLE, address(0));
+        _mint(msg.sender, 0, 3, "");
     }
 
     /// @dev Initiliazes the contract, like a constructor.
