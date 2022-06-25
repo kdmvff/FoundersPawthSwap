@@ -57,7 +57,7 @@ describe("NFT Swapper contract", function () {
     platformFeeRecipient = owner.address;
     // deploy contracts
     erc = await ErcContract.deploy();
-    nft = await NftContract.deploy(addr1.address, addr2.address);
+    nft = await NftContract.deploy();
     swap = await SwapContract.deploy(nft.address, erc.address);
     mainnetnft = await MainnetNFT.deploy(owner.address, owner.address,
        nftName, symbol, contractURI, [owner.address],

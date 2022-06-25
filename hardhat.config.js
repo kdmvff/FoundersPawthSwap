@@ -1,6 +1,7 @@
 require("@nomiclabs/hardhat-waffle");
 require('dotenv').config();
 require("@nomiclabs/hardhat-etherscan");
+require('@symblox/hardhat-abi-gen');
 const secret =require("./secret.json")
 
 module.exports = {
@@ -19,10 +20,18 @@ module.exports = {
     rinkeby: {
       url: secret.rinkebyUrl,
       accounts: [secret.key]
-    }
+    },
+    
   },
   etherscan: {
     apiKey: "XZUPHA25SS23BSDVQZTAGJ1WASF7ANFITZ"
+  },
+  abiExporter: {
+    path: './data/abi',
+    clear: true,
+    flat: true,
+    only: [],
+    spacing: 2
   },
   solidity: {
     compilers: [
